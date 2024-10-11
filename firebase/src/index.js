@@ -1,9 +1,15 @@
 import {initializeApp} from 'firebase/app'
 import {
     getFirestore, collection, onSnapshot, 
-    addDoc, deleteDoc, doc
+    addDoc, deleteDoc, doc,
+    query, where, orderBy, serverTimestamp,
+    getDoc, updateDoc
 
 } from 'firebase/firestore'
+import {
+    getAuth,createUserWithEmailAndPassword
+}from 'firebase/auth'
+
 import { title } from 'process';
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -20,9 +26,13 @@ const firebaseConfig = {
 
   //init services
 const db = getFirestore()
+const auth = getAuth()
 
   //collection ref
 const colRef = collection(db,'books')
+
+//que
+const q=query(colRef,orderBy('createdAt'))
 
   // real data
 // getDocs(colRef)
@@ -37,7 +47,7 @@ const colRef = collection(db,'books')
 //     console.log(err.message)
 // })
 
-onSnapshot(colRef, (snapshot) => {
+onSnapshot(q, (snapshot) => {
     let books = []
         snapshot.docs.forEach((doc) => {
             books.push({...doc.data(),id: doc.id})
@@ -52,6 +62,7 @@ addBookForm.addEventListener('submit',(e)=> {
     addDoc(colRef, {
         title: addBookForm.title.value ,
         author: addBookForm.author.value,
+        createdAt : serverTimestamp()
     })
     .then(() =>{
         addBookForm.reset()
@@ -69,5 +80,50 @@ deleteBookForm.addEventListener('submit',(e)=> {
     deleteDoc(docRef)
     .then(() => {
         deleteBookForm.reset()
+    })
+})
+
+// get single
+
+const docRef = doc(db,'books','keczW9QfSmaEyxgZ1fbv')
+
+//getDoc(docRef)
+//.then((doc) => {
+//    console.log(doc.data(),doc.id)
+//})
+
+onSnapshot(docRef, (doc) => {
+    console.log(doc.data(),doc.id)
+})
+
+//
+
+const updateForm = document.querySelector('.update')
+updateForm.addEventListener('submit',(e) => {
+    e.preventDefault()
+
+    const docRef =doc(db,'books', updateForm.id.value)
+
+    updateDoc(docRef,{
+        title: 'updated title'
+    })
+    .then(() => {
+        updateForm.reset()
+    })
+})
+
+// signup
+const signupForm = document.querySelector('.signup')
+signupForm.addEventListener('submit', (e) => {
+    e.preventDefault()
+    createUserWithEmailAndPassword(auth,signupForm.email.value,signupForm.password.value)
+    .then((cred) => {
+        console.log('user created: ', cred.user)
+        signupForm.reset()
+
+    })
+
+    .catch((err) => {
+        console.log(err.message)
     })
 })
