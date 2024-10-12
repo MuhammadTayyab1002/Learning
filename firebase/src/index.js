@@ -7,10 +7,13 @@ import {
 
 } from 'firebase/firestore'
 import {
-    getAuth,createUserWithEmailAndPassword
+    getAuth,createUserWithEmailAndPassword,
+    signOut,signInWithEmailAndPassword,
+    onAuthStateChanged
 }from 'firebase/auth'
 
 import { title } from 'process';
+
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -47,7 +50,7 @@ const q=query(colRef,orderBy('createdAt'))
 //     console.log(err.message)
 // })
 
-onSnapshot(q, (snapshot) => {
+const UnsubCol = onSnapshot(q, (snapshot) => {
     let books = []
         snapshot.docs.forEach((doc) => {
             books.push({...doc.data(),id: doc.id})
@@ -92,7 +95,7 @@ const docRef = doc(db,'books','keczW9QfSmaEyxgZ1fbv')
 //    console.log(doc.data(),doc.id)
 //})
 
-onSnapshot(docRef, (doc) => {
+const UnsubDoc = onSnapshot(docRef, (doc) => {
     console.log(doc.data(),doc.id)
 })
 
@@ -126,4 +129,41 @@ signupForm.addEventListener('submit', (e) => {
     .catch((err) => {
         console.log(err.message)
     })
+})
+
+//login and out
+const logoutButton = document.querySelector('.Logout')
+logoutButton.addEventListener('click', () => {
+signOut(auth)
+.then(() => {
+    //console.log('User sined out')
+})
+.catch((err) => {
+    console.log(err.message)
+})
+})
+
+const loginButton = document.querySelector('.Login')
+loginButton.addEventListener('submit', (e) => {
+    e.preventDefault()
+signInWithEmailAndPassword(auth,loginButton.email.value,loginButton.password.value)
+.then((cred) => {
+    //console.log('User loged in :', cred.user)
+})
+.catch((err) => {
+    console.log(err.message)
+})
+})
+//
+const Unsubauth = onAuthStateChanged(auth,(user) => {
+    console.log('user :',user)
+})
+//
+const UnsubButton=document.querySelector('.unsub')
+UnsubButton.addEventListener('click', () => {
+    console.log('Unsubcribing')
+    UnsubCol()
+    UnsubDoc()
+    Unsubauth()
+
 })
